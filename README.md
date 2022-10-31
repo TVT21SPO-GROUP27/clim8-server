@@ -1,7 +1,7 @@
 <table class="alert-warn" align=center>
   <tr>
     <td> ⚠️ </td>
-    <td>Cli8 (climate) is under heavy development and I can't give any ETA when it will be available!</td>
+    <td>Clim8 (climate) is under heavy development and I can't give any ETA when it will be available!</td>
   </tr>
 </table>
 
@@ -11,7 +11,7 @@ Clim8 is a global warming statistics visualizer and it collects data from multip
 
 
 
-## Current data sources
+## 📝 | Current data sources
 # HadCURT5
 https://www.metoffice.gov.uk/hadobs/hadcrut5/
 License: Open Government License v3
