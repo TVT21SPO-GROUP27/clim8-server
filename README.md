@@ -1,7 +1,7 @@
 <table class="alert-warn" align=center>
   <tr>
     <td> ⚠️ </td>
-    <td>Clim8 (climate) is under heavy development and I can't give any ETA when it will be available!</td>
+    <td>Clim8 (climate) is under heavy development and we can't give any ETA when it will be available!</td>
   </tr>
 </table>
 
