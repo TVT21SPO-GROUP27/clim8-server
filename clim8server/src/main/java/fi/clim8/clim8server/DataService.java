@@ -37,13 +37,13 @@ public class DataService {
         String url = "https://www.metoffice.gov.uk/hadobs/hadcrut5/data/current/analysis/diagnostics/HadCRUT.5.0.1.0.analysis.summary_series.";
 
         hadCURTDataList.addAll(readCSV(new URL(url + "global.monthly.csv"), EHadCURTSummarySeries.HADCURT_GLOBAL));
-        hadCURTDataList.addAll(readCSV(new URL(url + "global.annually.csv"), EHadCURTSummarySeries.HADCURT_GLOBAL));
+        hadCURTDataList.addAll(readCSV(new URL(url + "global.annual.csv"), EHadCURTSummarySeries.HADCURT_GLOBAL));
 
         hadCURTDataList.addAll(readCSV(new URL(url + "northern_hemisphere.monthly.csv"), EHadCURTSummarySeries.HADCURT_NORTHERN_HEMISPHERE));
-        hadCURTDataList.addAll(readCSV(new URL(url + "northern_hemisphere.annually.csv"), EHadCURTSummarySeries.HADCURT_NORTHERN_HEMISPHERE));
+        hadCURTDataList.addAll(readCSV(new URL(url + "northern_hemisphere.annual.csv"), EHadCURTSummarySeries.HADCURT_NORTHERN_HEMISPHERE));
 
         hadCURTDataList.addAll(readCSV(new URL(url + "southern_hemisphere.monthly.csv"), EHadCURTSummarySeries.HADCURT_SOUTHERN_HEMISPHERE));
-        hadCURTDataList.addAll(readCSV(new URL(url + "southern_hemisphere.annually.csv"), EHadCURTSummarySeries.HADCURT_SOUTHERN_HEMISPHERE));
+        hadCURTDataList.addAll(readCSV(new URL(url + "southern_hemisphere.annual.csv"), EHadCURTSummarySeries.HADCURT_SOUTHERN_HEMISPHERE));
 
         return hadCURTDataList;
     }
