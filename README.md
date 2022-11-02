@@ -4,6 +4,10 @@
     <td>Clim8 (climate) is under heavy development and we can't give any ETA when it will be available!</td>
   </tr>
 </table>
+<picture>
+  <source srcset='link'>
+  <img src='../sources/assets/icons/app.png' height='192' alt="Logo">
+</picture>
 
 # 🌍 | clim8 0.0.1
 
