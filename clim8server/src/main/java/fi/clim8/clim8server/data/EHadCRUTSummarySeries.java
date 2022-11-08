@@ -1,13 +1,13 @@
 package fi.clim8.clim8server.data;
 
-public enum EHadCURTSummarySeries {
-    HADCURT_GLOBAL("global"),
-    HADCURT_NORTHERN_HEMISPHERE("northern"),
-    HADCURT_SOUTHERN_HEMISPHERE("southern");
+public enum EHadCRUTSummarySeries {
+    HADCRUT_GLOBAL("global"),
+    HADCRUT_NORTHERN_HEMISPHERE("northern"),
+    HADCRUT_SOUTHERN_HEMISPHERE("southern");
 
     private final String summarySeries;
 
-    EHadCURTSummarySeries(String summarySeries) {
+    EHadCRUTSummarySeries(String summarySeries) {
         this.summarySeries = summarySeries;
     }
 

@@ -2,7 +2,7 @@ package fi.clim8.clim8server;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import fi.clim8.clim8server.data.HadCURTData;
+import fi.clim8.clim8server.data.HadCRUTData;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -41,8 +41,6 @@ public class DatabaseService {
                   [month] INT NOT NULL,
                   [summaryseries] CHAR(16) NOT NULL,
                   [degc] DOUBLE NOT NULL,
-                  [lowconfidencelimit] DOUBLE NOT NULL,
-                  [upperconfidencelimit] DOUBLE NOT NULL,
                   CONSTRAINT [PK_hadcurt_0] PRIMARY KEY ([year], [month], [summaryseries]),
                   CONSTRAINT [UK_hadcurt_0] UNIQUE ([year], [month], [summaryseries])
                 );""")) {
@@ -54,20 +52,16 @@ public class DatabaseService {
 
     }
 
-    public void refreshDataFromHadCURT(List<HadCURTData> data) {
+    public void refreshDataFromHadCRUT(List<HadCRUTData> data) {
         try(Connection connection = ds.getConnection()) {
-            try(PreparedStatement ps = connection.prepareStatement("INSERT INTO hadcurtdata (year, month, summaryseries, degc, lowconfidencelimit, upperconfidencelimit) VALUES (?,?,?,?,?,?) ON CONFLICT (year, month, summaryseries) DO UPDATE SET degc=?,lowconfidencelimit=?,upperconfidencelimit=?")) {
-                data.forEach(hadCURTData -> {
+            try(PreparedStatement ps = connection.prepareStatement("INSERT INTO hadcurtdata (year, month, summaryseries, degc) VALUES (?,?,?,?) ON CONFLICT (year, month, summaryseries) DO UPDATE SET degc=?")) {
+                data.forEach(hadCRUTData -> {
                     try {
-                        ps.setInt(1, hadCURTData.getYear());
-                        ps.setInt(2, hadCURTData.getMonth());
-                        ps.setString(3, hadCURTData.getSummarySeries().getSummarySeries());
-                        ps.setDouble(4, hadCURTData.getData()[0]);
-                        ps.setDouble(5, hadCURTData.getData()[1]);
-                        ps.setDouble(6, hadCURTData.getData()[2]);
-                        ps.setDouble(7, hadCURTData.getData()[0]);
-                        ps.setDouble(8, hadCURTData.getData()[1]);
-                        ps.setDouble(9, hadCURTData.getData()[2]);
+                        ps.setInt(1, hadCRUTData.getYear());
+                        ps.setInt(2, hadCRUTData.getMonth());
+                        ps.setString(3, hadCRUTData.getSummarySeries().getSummarySeries());
+                        ps.setDouble(4, hadCRUTData.getData());
+                        ps.setDouble(5, hadCRUTData.getData());
                         ps.addBatch();
                     } catch(Exception e) {
                         Logger.getGlobal().info(e.getMessage());
