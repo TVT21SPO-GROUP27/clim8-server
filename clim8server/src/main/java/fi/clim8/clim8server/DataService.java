@@ -49,10 +49,11 @@ public class DataService {
     }
 
     /**
-     * Fetches HadCRUT
-     * @param url
-     * @param summarySeries
-     * @return
+     * Fetches HadCRUT data.
+     *
+     * @param url           where the data is stored
+     * @param summarySeries which hemisphere this data is from
+     * @return              very spicy list full of HadCRUTData objects
      */
     public List<HadCRUTData> readCSV(URL url, EHadCRUTSummarySeries summarySeries) {
         List<HadCRUTData> hadCRUTDataList = new ArrayList<>();
