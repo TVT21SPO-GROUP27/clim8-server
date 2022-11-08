@@ -16,5 +16,4 @@ public class Clim8serverApplication {
         }
 		SpringApplication.run(Clim8serverApplication.class, args);
 	}
-
 }
