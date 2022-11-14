@@ -46,6 +46,15 @@ public class DatabaseService {
                 );""")) {
                 ps.execute();
             }
+            try(PreparedStatement ps = connection.prepareStatement("""
+                CREATE TABLE [users] (
+                  [id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                  [username] TEXT NOT NULL,
+                  [email] TEXT NOT NULL,
+                  [password] TEXT NOT NULL
+                );""")) {
+                ps.execute();
+            }
         } catch (SQLException e) {
             Logger.getGlobal().info(e.getMessage());
         }
@@ -67,7 +76,6 @@ public class DatabaseService {
                         Logger.getGlobal().info(e.getMessage());
                     }
                 });
-
                 ps.executeLargeBatch();
             }
         } catch (SQLException e) {

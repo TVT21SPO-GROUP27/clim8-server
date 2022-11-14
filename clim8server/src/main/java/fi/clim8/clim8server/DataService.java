@@ -24,11 +24,12 @@ public class DataService {
         return instance;
     }
 
-    public void init() throws MalformedURLException {
+    public void init(boolean nofetch) throws MalformedURLException {
         Logger.getGlobal().info("Refreshing database, please wait...");
         DatabaseService.getInstance().init();
-        DatabaseService.getInstance().refreshDataFromHadCRUT(getHadCRUTasBigData());
-
+        if(!nofetch) {
+            DatabaseService.getInstance().refreshDataFromHadCRUT(getHadCRUTasBigData());
+        }
         Logger.getGlobal().info("Database refreshed, have fun!");
     }
 
