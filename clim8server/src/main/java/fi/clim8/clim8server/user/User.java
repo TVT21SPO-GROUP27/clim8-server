@@ -1,11 +1,17 @@
 package fi.clim8.clim8server.user;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
+@Entity
 public class User {
     
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private String userName;
     private String email;
     private String password;
 
@@ -15,15 +21,12 @@ public class User {
     }
 
     public User(
-            Long id,
             String name,
-            String userName,
             String email,
             String password
             ) {
-        this.id = id;
         this.name = name;
-        this.userName = userName;
+        this.email = email;
         this.password = password;
       }
 
@@ -43,18 +46,10 @@ public class User {
         return name;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-    
-    public String getUserName() {
-        return userName;
-    }
-
     public void setEmail(String email) {
         this.email = email;
     }
-
+    
     public String getEmail() {
         return email;
     }
