@@ -11,7 +11,7 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:3000")
 public class RestService {
 
-    @GetMapping("data")
+    @GetMapping("hadcrutdata")
     public ResponseEntity<List<HadCRUTData>> getDataFromV1(){
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fecthHadCRUTData()));
     }
