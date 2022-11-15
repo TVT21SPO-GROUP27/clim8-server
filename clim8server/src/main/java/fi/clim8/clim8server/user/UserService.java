@@ -4,13 +4,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
+    /*
     private final UserRepository userRepository;
 
 
@@ -40,7 +39,6 @@ public class UserService {
         }
     }
 
-    @Transactional
     public void updateUser(Long userId, String name, String email) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("User with id " + userId + " does not exist."));
 
@@ -61,5 +59,5 @@ public class UserService {
             }
         
     }
-
+    */
 }
