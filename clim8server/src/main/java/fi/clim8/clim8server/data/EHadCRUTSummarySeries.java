@@ -14,4 +14,13 @@ public enum EHadCRUTSummarySeries {
     public String getSummarySeries() {
         return summarySeries;
     }
+
+    public static EHadCRUTSummarySeries find(String s) {
+        return switch (s) {
+            case "global" -> EHadCRUTSummarySeries.HADCRUT_GLOBAL;
+            case "northern" -> EHadCRUTSummarySeries.HADCRUT_NORTHERN_HEMISPHERE;
+            case "southern" -> EHadCRUTSummarySeries.HADCRUT_SOUTHERN_HEMISPHERE;
+            default -> null;
+        };
+    }
 }
