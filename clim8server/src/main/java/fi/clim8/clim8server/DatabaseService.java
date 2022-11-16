@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
+ import fi.clim8.clim8server.user.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -102,4 +103,39 @@ public class DatabaseService {
         }
         return data;
     }
+
+
+ 
+
+    public List<User> fetchAllUsers() {
+        List<User> user = new ArrayList<>();
+        try(Connection connection = ds.getConnection()) {
+            try(PreparedStatement ps = connection.prepareStatement("SELECT * FROM users")) {
+                ResultSet rs = ps.executeQuery();
+                while(rs.next()) {
+                    final User results = new User(rs.getLong("id"), rs.getString("username"), rs.getString("email"), rs.getString("password"));
+                    user.add(results);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return user;
+    }
+
+    public void addNewUser(User user) {
+        try(Connection connection = ds.getConnection()) {
+            Logger.getGlobal().info(user.getName());
+            try(PreparedStatement ps = connection.prepareStatement("INSERT INTO [users] ([username], [email], [password]) VALUES (?,?,?)")) {
+                ps.setString(1, user.getName());
+                ps.setString(2, user.getEmail());
+                ps.setString(3, user.getPassword());
+                ps.executeUpdate();
+
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+    }
+
 }
