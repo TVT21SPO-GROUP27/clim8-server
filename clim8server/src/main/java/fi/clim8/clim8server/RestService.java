@@ -30,8 +30,8 @@ public class RestService {
     }*/
 
     @PostMapping("users")
-    public ResponseEntity<String> addNewUser(@RequestParam String username, @RequestParam String email, @RequestParam String password) {
-        DatabaseService.getInstance().addNewUser(new User(null, username, email, password));
+    public ResponseEntity<String> addNewUser(@RequestBody User user) {
+        DatabaseService.getInstance().addNewUser(user);
         return ResponseEntity.ok("Success");
         
     }

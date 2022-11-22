@@ -125,7 +125,6 @@ public class DatabaseService {
 
     public void addNewUser(User user) {
         try(Connection connection = ds.getConnection()) {
-            Logger.getGlobal().info(user.getName());
             try(PreparedStatement ps = connection.prepareStatement("INSERT INTO [users] ([username], [email], [password]) VALUES (?,?,?)")) {
                 ps.setString(1, user.getName());
                 ps.setString(2, user.getEmail());
