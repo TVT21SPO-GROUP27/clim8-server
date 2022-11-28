@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.springframework.web.bind.annotation.RequestParam;
+
 public class DatabaseService {
 
     private static final HikariConfig config = new HikariConfig();
@@ -125,6 +127,7 @@ public class DatabaseService {
 
     public void addNewUser(User user) {
         try(Connection connection = ds.getConnection()) {
+            Logger.getGlobal().info(user.getName());
             try(PreparedStatement ps = connection.prepareStatement("INSERT INTO [users] ([username], [email], [password]) VALUES (?,?,?)")) {
                 ps.setString(1, user.getName());
                 ps.setString(2, user.getEmail());
@@ -137,4 +140,33 @@ public class DatabaseService {
         }
     }
 
+    public List<User> getUserById(User user) {
+        List<User> userResults = new ArrayList<>();
+        try(Connection connection = ds.getConnection()) {
+            try(PreparedStatement ps = connection.prepareStatement("SELECT * FROM users WHERE id = ?")) {
+                ps.setLong(1, user.getId());
+                ResultSet rs = ps.executeQuery();
+                while(rs.next()) {
+                    final User results = new User(rs.getLong("id"), rs.getString("username"), rs.getString("email"), rs.getString("password"));
+                    userResults.add(results);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return userResults;
+    }
+ 
+    public void deleteUser(User user) {
+        try(Connection connection = ds.getConnection()) {
+            try(PreparedStatement ps = connection.prepareStatement("DELETE FROM users WHERE id = ?")) {
+                ps.setLong(1, user.getId());
+                ps.executeUpdate();
+                
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+
+    }  
 }
