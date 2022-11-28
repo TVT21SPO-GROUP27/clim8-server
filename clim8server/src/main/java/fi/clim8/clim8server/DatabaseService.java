@@ -156,5 +156,17 @@ public class DatabaseService {
         }
         return userResults;
     }
+ 
+    public void deleteUser(User user) {
+        try(Connection connection = ds.getConnection()) {
+            try(PreparedStatement ps = connection.prepareStatement("DELETE FROM users WHERE id = ?")) {
+                ps.setLong(1, user.getId());
+                ps.executeUpdate();
+                
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
 
+    }  
 }

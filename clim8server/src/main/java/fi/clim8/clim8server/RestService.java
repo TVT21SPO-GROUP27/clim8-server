@@ -24,11 +24,16 @@ public class RestService {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchAllUsers()));
     }
 
-    @GetMapping("users/{id}")
+    @GetMapping("users")
     public ResponseEntity<List<User>> getUserById(User user, @RequestParam Long id) {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().getUserById(user)));    
     }
-    
+     
+    @DeleteMapping("users")
+    public ResponseEntity<String> deleteUser(User user, @RequestParam Long id) {
+        DatabaseService.getInstance().deleteUser(user);
+        return ResponseEntity.ok("User deleted succesfully.");
+    } 
     /*
      * @PostMapping("users")
      * public ResponseEntity<List<User>> createUser(@RequestBody User user) {
