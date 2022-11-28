@@ -23,17 +23,24 @@ public class RestService {
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchAllUsers()));
     }
-/* 
-    @PostMapping("users")
-    public ResponseEntity<List<User>> createUser(@RequestBody User user) {
-        return ResponseEntity.of(Optional.of(DatabaseService.getInstance().addNewUser());
-    }*/
+
+    @GetMapping("users/{id}")
+    public ResponseEntity<List<User>> getUserById(User user, @RequestParam Long id) {
+        return ResponseEntity.of(Optional.of(DatabaseService.getInstance().getUserById(user)));    
+    }
+    
+    /*
+     * @PostMapping("users")
+     * public ResponseEntity<List<User>> createUser(@RequestBody User user) {
+     * return
+     * ResponseEntity.of(Optional.of(DatabaseService.getInstance().addNewUser());
+     * }
+     */
 
     @PostMapping("users")
     public ResponseEntity<String> addNewUser(@RequestBody User user) {
         DatabaseService.getInstance().addNewUser(user);
         return ResponseEntity.ok("Success");
-        
+
     }
 }
-
