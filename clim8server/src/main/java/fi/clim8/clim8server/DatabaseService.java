@@ -2,6 +2,7 @@ package fi.clim8.clim8server;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
  import fi.clim8.clim8server.user.User;
@@ -13,8 +14,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
-import org.springframework.web.bind.annotation.RequestParam;
 
 public class DatabaseService {
 
@@ -33,7 +32,7 @@ public class DatabaseService {
         config.setJdbcUrl("jdbc:sqlite:./localdata.db");
         config.setConnectionTestQuery("SELECT 1;");
         config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSize", "512");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "4096");
         config.setMinimumIdle(2);
         config.setMaximumPoolSize(50);
@@ -41,6 +40,12 @@ public class DatabaseService {
         ds = new HikariDataSource(config);
 
         try(Connection connection = ds.getConnection()) {
+            //Makes database fetching faster, but increases potential corruptions... Pffh...
+            try(PreparedStatement ps = connection.prepareStatement("""
+                PRAGMA synchronous = off;
+                """)) {
+                ps.execute();
+            }
             try(PreparedStatement ps = connection.prepareStatement("""
                 CREATE TABLE [hadcrutdata] (
                   [year] INT NOT NULL,
@@ -49,6 +54,15 @@ public class DatabaseService {
                   [degc] DOUBLE NOT NULL,
                   CONSTRAINT [PK_hadcurt_0] PRIMARY KEY ([year], [month], [summaryseries]),
                   CONSTRAINT [UK_hadcurt_0] UNIQUE ([year], [month], [summaryseries])
+                );""")) {
+                ps.execute();
+            }
+            try(PreparedStatement ps = connection.prepareStatement("""
+                CREATE TABLE [mobergdata] (
+                  [year] INT NOT NULL,
+                  [data] DOUBLE NOT NULL,
+                  CONSTRAINT [PK_moberg_0] PRIMARY KEY ([year]),
+                  CONSTRAINT [UK_moberg_0] UNIQUE ([year])
                 );""")) {
                 ps.execute();
             }
@@ -106,8 +120,42 @@ public class DatabaseService {
         return data;
     }
 
+    public void refreshDataFromMoberg2005(List<AbstractData> data) {
+        try(Connection connection = ds.getConnection()) {
+            try(PreparedStatement ps = connection.prepareStatement("INSERT INTO mobergdata (year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
+                data.forEach(mobergData -> {
+                    try {
+                        ps.setInt(1, mobergData.getYear());
+                        ps.setDouble(2, mobergData.getData());
+                        ps.setDouble(3, mobergData.getData());
+                        ps.addBatch();
+                    } catch(Exception e) {
+                        Logger.getGlobal().info(e.getMessage());
+                    }
+                });
+                ps.executeLargeBatch();
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+    }
 
- 
+    public List<AbstractData> fetchMoberg2005Data() {
+        List<AbstractData> data = new ArrayList<>();
+        try(Connection connection = ds.getConnection()) {
+            try(PreparedStatement ps = connection.prepareStatement("SELECT * FROM mobergdata")) {
+                ResultSet rs = ps.executeQuery();
+                while(rs.next()) {
+                    final AbstractData temp = new AbstractData(rs.getInt(1));
+                    temp.setData(rs.getDouble(2));
+                    data.add(temp);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return data;
+    }
 
     public List<User> fetchAllUsers() {
         List<User> user = new ArrayList<>();
