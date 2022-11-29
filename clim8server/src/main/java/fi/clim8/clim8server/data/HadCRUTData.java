@@ -1,20 +1,16 @@
 package fi.clim8.clim8server.data;
 
-public class HadCRUTData {
-    int year;
+public class HadCRUTData extends AbstractData {
+
     int month;
     EHadCRUTSummarySeries summarySeries;
-    double data = 0.0;
 
     public HadCRUTData(int year, int month, EHadCRUTSummarySeries summarySeries) {
-        this.year = year;
+        super(year);
         this.month = month;
         this.summarySeries = summarySeries;
     }
 
-    public int getYear() {
-        return year;
-    }
 
     public int getMonth() {
         return month;
@@ -24,11 +20,8 @@ public class HadCRUTData {
         return summarySeries;
     }
 
-    public double getData() {
-        return data;
-    }
-
-    public void setData(double degC) {
-        data = degC;
+    @Override
+    public String toString() {
+        return "Year: " + year + ", Month: " + month + ", SummarySeries: " + summarySeries.toString() + ", Data: " + data;
     }
 }

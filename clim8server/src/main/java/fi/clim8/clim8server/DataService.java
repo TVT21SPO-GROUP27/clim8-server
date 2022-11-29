@@ -2,6 +2,7 @@ package fi.clim8.clim8server;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
+import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
 
@@ -12,9 +13,11 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 public class DataService {
 
@@ -29,6 +32,7 @@ public class DataService {
         DatabaseService.getInstance().init();
         if(!nofetch) {
             DatabaseService.getInstance().refreshDataFromHadCRUT(getHadCRUTasBigData());
+            DatabaseService.getInstance().refreshDataFromMoberg2005(fetchMoberg2005(new URL("https://www.ncei.noaa.gov/pub/data/paleo/contributions_by_author/moberg2005/nhtemp-moberg2005.txt")));
         }
         Logger.getGlobal().info("Database refreshed, have fun!");
     }
@@ -78,5 +82,24 @@ public class DataService {
             Logger.getGlobal().info(e.getMessage());
         }
         return hadCRUTDataList;
+    }
+
+    public List<AbstractData> fetchMoberg2005(URL url) {
+        List<AbstractData> mobergDataList = new ArrayList<>();
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+            //Skip unnecessary lines
+            Stream<String> lines = reader.lines().skip(93);
+
+            lines.forEach(line -> {
+                String[] data = line.split(" ");
+                List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
+                AbstractData adata = new AbstractData(Integer.parseInt(list.get(0)));
+                adata.setData(Double.parseDouble(list.get(1)));
+                mobergDataList.add(adata);
+            });
+        } catch (IOException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return mobergDataList;
     }
 }
