@@ -1,9 +1,13 @@
 package fi.clim8.clim8server.user;
 
-public class User {
+import java.io.Serializable;
 
+public class User implements Serializable  {
+
+    private static final long serialVersionUID = 5926468583005150707L;
+    
     private Long id;
-    private String name;
+    private String username;
     private String email;
     private String password;
 
@@ -13,11 +17,11 @@ public class User {
 
     public User(
             Long id,
-            String name,
+            String username,
             String email,
             String password) {
         this.id = id;
-        this.name = name;
+        this.username = username;
         this.email = email;
         this.password = password;
     }
@@ -30,12 +34,12 @@ public class User {
         return id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
     public void setEmail(String email) {
