@@ -5,7 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
- import fi.clim8.clim8server.user.User;
+import fi.clim8.clim8server.user.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,7 +26,6 @@ public class DatabaseService {
         return sql;
     }
 
-
     public void init() {
         config.setDriverClassName("org.sqlite.JDBC");
         config.setJdbcUrl("jdbc:sqlite:./localdata.db");
@@ -39,40 +38,41 @@ public class DatabaseService {
         config.setConnectionTimeout(10000);
         ds = new HikariDataSource(config);
 
-        try(Connection connection = ds.getConnection()) {
-            //Makes database fetching faster, but increases potential corruptions... Pffh...
-            try(PreparedStatement ps = connection.prepareStatement("""
-                PRAGMA synchronous = off;
-                """)) {
+        try (Connection connection = ds.getConnection()) {
+            // Makes database fetching faster, but increases potential corruptions...
+            // Pffh...
+            try (PreparedStatement ps = connection.prepareStatement("""
+                    PRAGMA synchronous = off;
+                    """)) {
                 ps.execute();
             }
-            try(PreparedStatement ps = connection.prepareStatement("""
-                CREATE TABLE [hadcrutdata] (
-                  [year] INT NOT NULL,
-                  [month] INT NOT NULL,
-                  [summaryseries] CHAR(16) NOT NULL,
-                  [degc] DOUBLE NOT NULL,
-                  CONSTRAINT [PK_hadcurt_0] PRIMARY KEY ([year], [month], [summaryseries]),
-                  CONSTRAINT [UK_hadcurt_0] UNIQUE ([year], [month], [summaryseries])
-                );""")) {
+            try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [hadcrutdata] (
+                      [year] INT NOT NULL,
+                      [month] INT NOT NULL,
+                      [summaryseries] CHAR(16) NOT NULL,
+                      [degc] DOUBLE NOT NULL,
+                      CONSTRAINT [PK_hadcurt_0] PRIMARY KEY ([year], [month], [summaryseries]),
+                      CONSTRAINT [UK_hadcurt_0] UNIQUE ([year], [month], [summaryseries])
+                    );""")) {
                 ps.execute();
             }
-            try(PreparedStatement ps = connection.prepareStatement("""
-                CREATE TABLE [mobergdata] (
-                  [year] INT NOT NULL,
-                  [data] DOUBLE NOT NULL,
-                  CONSTRAINT [PK_moberg_0] PRIMARY KEY ([year]),
-                  CONSTRAINT [UK_moberg_0] UNIQUE ([year])
-                );""")) {
+            try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [mobergdata] (
+                      [year] INT NOT NULL,
+                      [data] DOUBLE NOT NULL,
+                      CONSTRAINT [PK_moberg_0] PRIMARY KEY ([year]),
+                      CONSTRAINT [UK_moberg_0] UNIQUE ([year])
+                    );""")) {
                 ps.execute();
             }
-            try(PreparedStatement ps = connection.prepareStatement("""
-                CREATE TABLE [users] (
-                  [id] INTEGER PRIMARY KEY AUTOINCREMENT,
-                  [username] TEXT NOT NULL,
-                  [email] TEXT NOT NULL,
-                  [password] TEXT NOT NULL
-                );""")) {
+            try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [users] (
+                      [id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                      [username] TEXT NOT NULL,
+                      [email] TEXT NOT NULL,
+                      [password] TEXT NOT NULL
+                    );""")) {
                 ps.execute();
             }
         } catch (SQLException e) {
@@ -82,8 +82,9 @@ public class DatabaseService {
     }
 
     public void refreshDataFromHadCRUT(List<HadCRUTData> data) {
-        try(Connection connection = ds.getConnection()) {
-            try(PreparedStatement ps = connection.prepareStatement("INSERT INTO hadcrutdata (year, month, summaryseries, degc) VALUES (?,?,?,?) ON CONFLICT (year, month, summaryseries) DO UPDATE SET degc=?")) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO hadcrutdata (year, month, summaryseries, degc) VALUES (?,?,?,?) ON CONFLICT (year, month, summaryseries) DO UPDATE SET degc=?")) {
                 data.forEach(hadCRUTData -> {
                     try {
                         ps.setInt(1, hadCRUTData.getYear());
@@ -92,7 +93,7 @@ public class DatabaseService {
                         ps.setDouble(4, hadCRUTData.getData());
                         ps.setDouble(5, hadCRUTData.getData());
                         ps.addBatch();
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         Logger.getGlobal().info(e.getMessage());
                     }
                 });
@@ -105,11 +106,12 @@ public class DatabaseService {
 
     public List<HadCRUTData> fecthHadCRUTData() {
         List<HadCRUTData> data = new ArrayList<>();
-        try(Connection connection = ds.getConnection()) {
-            try(PreparedStatement ps = connection.prepareStatement("SELECT * FROM hadcrutdata")) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM hadcrutdata")) {
                 ResultSet rs = ps.executeQuery();
-                while(rs.next()) {
-                    final HadCRUTData temp = new HadCRUTData(rs.getInt(1), rs.getInt(2), EHadCRUTSummarySeries.find(rs.getString(3)));
+                while (rs.next()) {
+                    final HadCRUTData temp = new HadCRUTData(rs.getInt(1), rs.getInt(2),
+                            EHadCRUTSummarySeries.find(rs.getString(3)));
                     temp.setData(rs.getDouble(4));
                     data.add(temp);
                 }
@@ -121,15 +123,16 @@ public class DatabaseService {
     }
 
     public void refreshDataFromMoberg2005(List<AbstractData> data) {
-        try(Connection connection = ds.getConnection()) {
-            try(PreparedStatement ps = connection.prepareStatement("INSERT INTO mobergdata (year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO mobergdata (year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
                 data.forEach(mobergData -> {
                     try {
                         ps.setInt(1, mobergData.getYear());
                         ps.setDouble(2, mobergData.getData());
                         ps.setDouble(3, mobergData.getData());
                         ps.addBatch();
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         Logger.getGlobal().info(e.getMessage());
                     }
                 });
@@ -142,10 +145,10 @@ public class DatabaseService {
 
     public List<AbstractData> fetchMoberg2005Data() {
         List<AbstractData> data = new ArrayList<>();
-        try(Connection connection = ds.getConnection()) {
-            try(PreparedStatement ps = connection.prepareStatement("SELECT * FROM mobergdata")) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM mobergdata")) {
                 ResultSet rs = ps.executeQuery();
-                while(rs.next()) {
+                while (rs.next()) {
                     final AbstractData temp = new AbstractData(rs.getInt(1));
                     temp.setData(rs.getDouble(2));
                     data.add(temp);
@@ -159,27 +162,33 @@ public class DatabaseService {
 
     public List<User> fetchAllUsers() {
         List<User> user = new ArrayList<>();
-        try(Connection connection = ds.getConnection()) {
-            try(PreparedStatement ps = connection.prepareStatement("SELECT * FROM users")) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM users")) {
                 ResultSet rs = ps.executeQuery();
-                while(rs.next()) {
-                    final User results = new User(rs.getLong("id"), rs.getString("username"), rs.getString("email"), rs.getString("password"));
+                while (rs.next()) {
+                    final User results = new User(rs.getLong("id"), rs.getString("username"), rs.getString("email"),
+                            rs.getString("password"));
                     user.add(results);
                 }
             }
         } catch (SQLException e) {
             Logger.getGlobal().info(e.getMessage());
         }
+        System.out.println(user);
         return user;
     }
 
     public void addNewUser(User user) {
-        try(Connection connection = ds.getConnection()) {
-            Logger.getGlobal().info(user.getName());
-            try(PreparedStatement ps = connection.prepareStatement("INSERT INTO [users] ([username], [email], [password]) VALUES (?,?,?)")) {
-                ps.setString(1, user.getName());
+        try (Connection connection = ds.getConnection()) {
+            Logger.getGlobal().info(user.getUserName());
+            try (PreparedStatement ps = connection
+                    .prepareStatement("INSERT INTO users (username, email, password) VALUES (?,?,?)")) {
+                ps.setString(1, user.getUserName());
                 ps.setString(2, user.getEmail());
                 ps.setString(3, user.getPassword());
+                System.out.println(user.getUserName());
+                System.out.println(user.getEmail());
+                System.out.println(user.getPassword());
                 ps.executeUpdate();
 
             }
@@ -190,12 +199,13 @@ public class DatabaseService {
 
     public List<User> getUserById(User user) {
         List<User> userResults = new ArrayList<>();
-        try(Connection connection = ds.getConnection()) {
-            try(PreparedStatement ps = connection.prepareStatement("SELECT * FROM users WHERE id = ?")) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM users WHERE id = ?")) {
                 ps.setLong(1, user.getId());
                 ResultSet rs = ps.executeQuery();
-                while(rs.next()) {
-                    final User results = new User(rs.getLong("id"), rs.getString("username"), rs.getString("email"), rs.getString("password"));
+                while (rs.next()) {
+                    final User results = new User(rs.getLong("id"), rs.getString("username"), rs.getString("email"),
+                            rs.getString("password"));
                     userResults.add(results);
                 }
             }
@@ -204,17 +214,17 @@ public class DatabaseService {
         }
         return userResults;
     }
- 
+
     public void deleteUser(User user) {
-        try(Connection connection = ds.getConnection()) {
-            try(PreparedStatement ps = connection.prepareStatement("DELETE FROM users WHERE id = ?")) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("DELETE FROM users WHERE id = ?")) {
                 ps.setLong(1, user.getId());
                 ps.executeUpdate();
-                
+
             }
         } catch (SQLException e) {
             Logger.getGlobal().info(e.getMessage());
         }
 
-    }  
+    }
 }
