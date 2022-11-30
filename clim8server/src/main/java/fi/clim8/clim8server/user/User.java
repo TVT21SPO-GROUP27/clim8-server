@@ -3,7 +3,7 @@ package fi.clim8.clim8server.user;
 public class User {
 
     private Long id;
-    private String username;
+    private String name;
     private String email;
     private String password;
 
@@ -13,11 +13,11 @@ public class User {
 
     public User(
             Long id,
-            String username,
+            String name,
             String email,
             String password) {
         this.id = id;
-        this.username = username;
+        this.name = name;
         this.email = email;
         this.password = password;
     }
@@ -30,12 +30,12 @@ public class User {
         return id;
     }
 
-    public void setUserName(String username) {
-        this.username = username;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getUserName() {
-        return username;
+    public String getName() {
+        return name;
     }
 
     public void setEmail(String email) {

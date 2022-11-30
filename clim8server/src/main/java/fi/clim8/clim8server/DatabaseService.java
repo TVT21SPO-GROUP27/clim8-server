@@ -174,23 +174,27 @@ public class DatabaseService {
         } catch (SQLException e) {
             Logger.getGlobal().info(e.getMessage());
         }
-        System.out.println(user);
         return user;
     }
 
     public void addNewUser(User user) {
         try (Connection connection = ds.getConnection()) {
-            Logger.getGlobal().info(user.getUserName());
+            Logger.getGlobal().info(user.getName());
             try (PreparedStatement ps = connection
-                    .prepareStatement("INSERT INTO users (username, email, password) VALUES (?,?,?)")) {
-                ps.setString(1, user.getUserName());
+                    .prepareStatement("INSERT INTO [users] ([username], [email], [password]) VALUES (?,?,?)")) {
+                ps.setString(1, user.getName());
                 ps.setString(2, user.getEmail());
                 ps.setString(3, user.getPassword());
-                System.out.println(user.getUserName());
+
+                System.out.println(user.getName());
                 System.out.println(user.getEmail());
                 System.out.println(user.getPassword());
-                ps.executeUpdate();
 
+                if (checkUserNameExistance(user) == true) {
+                    System.out.println("Käyttäjänimi on käytössä.");
+                } else {
+                    ps.executeUpdate();
+                }
             }
         } catch (SQLException e) {
             Logger.getGlobal().info(e.getMessage());
@@ -227,4 +231,23 @@ public class DatabaseService {
         }
 
     }
+
+    public boolean checkUserNameExistance(User user) throws SQLException {
+        boolean exists;
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM users WHERE username = ?")) {
+                ps.setString(1, user.getName());
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    exists = true;
+                } else {
+                    exists = false;
+                }
+            }
+            return exists;
+
+        }
+
+    }
+
 }
