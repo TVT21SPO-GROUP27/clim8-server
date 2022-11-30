@@ -192,6 +192,8 @@ public class DatabaseService {
 
                 if (checkUserNameExistance(user) == true) {
                     System.out.println("Käyttäjänimi on käytössä.");
+                } if (checkEmailExistance(user) == true){
+                    System.out.println("Sähköposti on jo käytössä.");
                 } else {
                     ps.executeUpdate();
                 }
@@ -237,6 +239,24 @@ public class DatabaseService {
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM users WHERE username = ?")) {
                 ps.setString(1, user.getName());
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    exists = true;
+                } else {
+                    exists = false;
+                }
+            }
+            return exists;
+
+        }
+
+    }
+
+    public boolean checkEmailExistance(User user) throws SQLException {
+        boolean exists;
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM users WHERE email = ?")) {
+                ps.setString(1, user.getEmail());
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) {
                     exists = true;
