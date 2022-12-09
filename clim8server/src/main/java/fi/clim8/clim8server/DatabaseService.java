@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
+import fi.clim8.clim8server.data.MaunaLoaData;
 import fi.clim8.clim8server.user.User;
 
 import java.sql.Connection;
@@ -72,6 +73,16 @@ public class DatabaseService {
                       [username] TEXT NOT NULL,
                       [email] TEXT NOT NULL,
                       [password] TEXT NOT NULL
+                    );""")) {
+                ps.execute();
+            }
+            try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [maunaloadata] (
+                      [year] INT NOT NULL,
+                      [month] INT NOT NULL,
+                      [co2] DOUBLE NOT NULL,
+                      CONSTRAINT [PK_maunaloa_0] PRIMARY KEY ([year], [month]),
+                      CONSTRAINT [UK_maunaloa_0] UNIQUE ([year], [month])
                     );""")) {
                 ps.execute();
             }
@@ -143,6 +154,27 @@ public class DatabaseService {
         }
     }
 
+        public void refreshDataFromMaunaLoa(List<MaunaLoaData> data) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO maunaloadata (year, month, co2) VALUES (?,?,?) ON CONFLICT (year, month) DO UPDATE SET co2=?")) {
+                data.forEach(maunaLoaData -> {
+                    try {
+                        ps.setInt(1, maunaLoaData.getYear());
+                        ps.setInt(2, maunaLoaData.getMonth());
+                        ps.setDouble(3, maunaLoaData.getData());
+                        ps.addBatch();
+                    } catch (Exception e) {
+                        Logger.getGlobal().info(e.getMessage());
+                    }
+                });
+                ps.executeLargeBatch();
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+    }
+
     public List<AbstractData> fetchMoberg2005Data() {
         List<AbstractData> data = new ArrayList<>();
         try (Connection connection = ds.getConnection()) {
@@ -151,6 +183,23 @@ public class DatabaseService {
                 while (rs.next()) {
                     final AbstractData temp = new AbstractData(rs.getInt(1));
                     temp.setData(rs.getDouble(2));
+                    data.add(temp);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return data;
+    }
+
+        public List<MaunaLoaData> fetchMaunaLoaData() {
+        List<MaunaLoaData> data = new ArrayList<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM maunaloadata")) {
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    final MaunaLoaData temp = new MaunaLoaData(rs.getInt(1), rs.getInt(2));
+                    temp.setData(rs.getDouble(3));
                     data.add(temp);
                 }
             }

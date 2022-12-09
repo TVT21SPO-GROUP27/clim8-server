@@ -2,6 +2,7 @@ package fi.clim8.clim8server;
 
 import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.HadCRUTData;
+import fi.clim8.clim8server.data.MaunaLoaData;
 import fi.clim8.clim8server.user.User;
 
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,10 @@ public class RestService {
     @GetMapping("mobergdata")
     public ResponseEntity<List<AbstractData>> getDataFromV2() {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchMoberg2005Data()));
+    }
+    @GetMapping("maunaloadata")
+    public ResponseEntity<List<MaunaLoaData>> getDataFromV3() {
+        return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchMaunaLoaData()));
     }
 
     @GetMapping("getAllUsers")
