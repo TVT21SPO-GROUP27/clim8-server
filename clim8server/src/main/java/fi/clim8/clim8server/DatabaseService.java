@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
+import fi.clim8.clim8server.data.IceCoreData;
 import fi.clim8.clim8server.data.MaunaLoaData;
 import fi.clim8.clim8server.user.User;
 
@@ -83,6 +84,15 @@ public class DatabaseService {
                       [co2] DOUBLE NOT NULL,
                       CONSTRAINT [PK_maunaloa_0] PRIMARY KEY ([year], [month]),
                       CONSTRAINT [UK_maunaloa_0] UNIQUE ([year], [month])
+                    );""")) {
+                ps.execute();
+            }
+            try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [icecoredata] (
+                      [year] INT NOT NULL,
+                      [data] DOUBLE NOT NULL,
+                      CONSTRAINT [PK_icecore_0] PRIMARY KEY ([year]),
+                      CONSTRAINT [UK_icecore_0] UNIQUE ([year])
                     );""")) {
                 ps.execute();
             }
@@ -174,6 +184,26 @@ public class DatabaseService {
             Logger.getGlobal().info(e.getMessage());
         }
     }
+    public void refreshDataFromIceCore(List<IceCoreData> data) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO icecoredata (year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
+                data.forEach(iceCoreData -> {
+                    try {
+                        ps.setInt(1, iceCoreData.getYear());
+                        ps.setDouble(2, iceCoreData.getData());
+                        ps.setDouble(3, iceCoreData.getData());
+                        ps.addBatch();
+                    } catch (Exception e) {
+                        Logger.getGlobal().info(e.getMessage());
+                    }
+                });
+                ps.executeLargeBatch();
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+    }
 
     public List<AbstractData> fetchMoberg2005Data() {
         List<AbstractData> data = new ArrayList<>();
@@ -200,6 +230,22 @@ public class DatabaseService {
                 while (rs.next()) {
                     final MaunaLoaData temp = new MaunaLoaData(rs.getInt(1), rs.getInt(2));
                     temp.setData(rs.getDouble(3));
+                    data.add(temp);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return data;
+    }
+    public List<IceCoreData> fetchIceCoreData() {
+        List<IceCoreData> data = new ArrayList<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM icecoredata")) {
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    final IceCoreData temp = new IceCoreData(rs.getInt(1));
+                    temp.setData(rs.getDouble(2));
                     data.add(temp);
                 }
             }
@@ -252,11 +298,58 @@ public class DatabaseService {
         }
     }
 
+    public boolean login(User user) {
+        boolean exists;
+        try (Connection connection = ds.getConnection()) {
+            Logger.getGlobal().info(user.getName());
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM users WHERE username = ? AND password = ?")) {
+                ps.setString(1, user.getName());
+                ps.setString(2, user.getPassword());
+                ResultSet rs = ps.executeQuery();
+
+                System.out.println(user.getName());
+                System.out.println(user.getPassword());
+
+                if (rs.next()) {
+                    exists = true;
+                    System.out.println("Logged in!");
+                } else {
+                    exists = false;
+                    System.out.println("Wrong username/password...");
+                }
+                return exists;
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+            System.out.println("An unexpected error occurred...");
+            return false;
+        }
+
+    }
+
     public List<User> getUserById(User user) {
         List<User> userResults = new ArrayList<>();
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM users WHERE id = ?")) {
                 ps.setLong(1, user.getId());
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    final User results = new User(rs.getLong("id"), rs.getString("username"), rs.getString("email"),
+                            rs.getString("password"));
+                    userResults.add(results);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return userResults;
+    }
+
+    public List<User> getUserByName(User user) {
+        List<User> userResults = new ArrayList<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM users WHERE username = ?")) {
+                ps.setString(1, user.getName());
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     final User results = new User(rs.getLong("id"), rs.getString("username"), rs.getString("email"),

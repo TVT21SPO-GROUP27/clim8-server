@@ -5,6 +5,7 @@ import com.opencsv.exceptions.CsvException;
 import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
+import fi.clim8.clim8server.data.IceCoreData;
 import fi.clim8.clim8server.data.MaunaLoaData;
 
 import java.io.BufferedReader;
@@ -37,6 +38,7 @@ public class DataService {
             DatabaseService.getInstance().refreshDataFromMoberg2005(fetchMoberg2005(new URL("https://www.ncei.noaa.gov/pub/data/paleo/contributions_by_author/moberg2005/nhtemp-moberg2005.txt")));
             DatabaseService.getInstance().refreshDataFromMaunaLoa(fetchMaunaLoaAnnual(new URL("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_annmean_mlo.txt")));
             DatabaseService.getInstance().refreshDataFromMaunaLoa(fetchMaunaLoaMonthly(new URL("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt")));
+            DatabaseService.getInstance().refreshDataFromIceCore(fetchIceCore(new URL("https://cdiac.ess-dive.lbl.gov/ftp/trends/co2/lawdome.combined.dat")));
         }
         Logger.getGlobal().info("Database refreshed, have fun!");
     }
@@ -55,16 +57,6 @@ public class DataService {
         hadCRUTDataList.addAll(readCSV(new URL(url + "southern_hemisphere.annual.csv"), EHadCRUTSummarySeries.HADCRUT_SOUTHERN_HEMISPHERE));
 
         return hadCRUTDataList;
-    }
-    /* 
-        private List<MaunaLoaData> getMaunaLoaAsBigData() throws MalformedURLException {
-        List<MaunaLoaData> MaunaLoaDataList = new ArrayList<>();
-        String url = "https://gml.noaa.gov/webdata/ccgg/trends/co2";
-
-        MaunaLoaDataList.addAll(readCSVAnnual(new URL(url + "/co2_mm_mlo.csv"))); 
-        MaunaLoaDataList.addAll(readCSVMonthly(new URL(url + "/co2_annmean_mlo.csv")));
-
-        return MaunaLoaDataList;
     }
 
     /**
@@ -97,53 +89,6 @@ public class DataService {
         }
         return hadCRUTDataList;
     }
-    /* 
-    public List<MaunaLoaData> readCSVAnnual(URL url) {
-        List<MaunaLoaData> maunaLoaDataList = new ArrayList<>();
-        try(Reader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
-            try(CSVReader csvReader = new CSVReader(reader)) {
-                AtomicInteger i = new AtomicInteger(1);
-                csvReader.readAll().forEach(array -> {
-                    if(i.get() != 1) {
-                        String[] parse = array[0].split(",");
-                        int year = Integer.parseInt(parse[0]);
-                        int month = 0;
-                        if(parse.length != 1) month = Integer.parseInt(parse[1]);
-                        final MaunaLoaData md = new MaunaLoaData(year, month);
-                        md.setData(Double.parseDouble(array[1]));
-                        maunaLoaDataList.add(md);
-                    }
-                    i.addAndGet(1);
-                });
-            }
-        } catch (IOException | CsvException e) {
-            Logger.getGlobal().info(e.getMessage());
-        }
-        return maunaLoaDataList;
-    } 
-        public List<MaunaLoaData> readCSVMonthly(URL url) {
-        List<MaunaLoaData> maunaLoaDataList = new ArrayList<>();
-        try(Reader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
-            try(CSVReader csvReader = new CSVReader(reader)) {
-                AtomicInteger i = new AtomicInteger(1);
-                csvReader.readAll().forEach(array -> {
-                    if(i.get() != 1) {
-                        String[] parse = array[0].split(",");
-                        int year = Integer.parseInt(parse[0]);
-                        int month = 0;
-                        if(parse.length != 1) month = Integer.parseInt(parse[1]);
-                        final MaunaLoaData md = new MaunaLoaData(year, month);
-                        md.setData(Double.parseDouble(array[3]));
-                        maunaLoaDataList.add(md);
-                    }
-                    i.addAndGet(1);
-                });
-            }
-        } catch (IOException | CsvException e) {
-            Logger.getGlobal().info(e.getMessage());
-        }
-        return maunaLoaDataList;
-    } */
 
     public List<AbstractData> fetchMoberg2005(URL url) {
         List<AbstractData> mobergDataList = new ArrayList<>();
@@ -164,7 +109,7 @@ public class DataService {
         return mobergDataList;
     }
 
-      public List<MaunaLoaData> fetchMaunaLoaAnnual(URL url) {
+    public List<MaunaLoaData> fetchMaunaLoaAnnual(URL url) {
         List<MaunaLoaData> maunaLoaDataList = new ArrayList<>();
         try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
             //Skip unnecessary lines
@@ -182,7 +127,8 @@ public class DataService {
         }
         return maunaLoaDataList;
     }
-          public List<MaunaLoaData> fetchMaunaLoaMonthly(URL url) {
+
+    public List<MaunaLoaData> fetchMaunaLoaMonthly(URL url) {
         List<MaunaLoaData> maunaLoaDataList = new ArrayList<>();
         try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
             //Skip unnecessary lines
@@ -199,5 +145,24 @@ public class DataService {
             Logger.getGlobal().info(e.getMessage());
         }
         return maunaLoaDataList;
+    }
+
+    public List<IceCoreData> fetchIceCore(URL url) {
+        List<IceCoreData> iceCoreDataList = new ArrayList<>();
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+            //Skip unnecessary lines
+            Stream<String> lines = reader.lines().skip(22);
+            
+            lines.forEach(line -> {
+                String[] data = line.split(" ");
+                List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
+                IceCoreData tempData = new IceCoreData(Integer.parseInt(list.get(5)));
+                tempData.setData(Double.parseDouble(list.get(6)));
+                iceCoreDataList.add(tempData);
+            });
+        } catch (IOException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return iceCoreDataList;
     }
 }
