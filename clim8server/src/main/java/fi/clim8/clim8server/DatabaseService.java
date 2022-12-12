@@ -89,10 +89,11 @@ public class DatabaseService {
             }
             try (PreparedStatement ps = connection.prepareStatement("""
                     CREATE TABLE [icecoredata] (
-                      [year] INT NOT NULL,
+                      [year] INTE NOT NULL,
+                      [series] CHAR(15) NOT NULL,
                       [data] DOUBLE NOT NULL,
-                      CONSTRAINT [PK_icecore_0] PRIMARY KEY ([year]),
-                      CONSTRAINT [UK_icecore_0] UNIQUE ([year])
+                      CONSTRAINT [PK_icecore_0] PRIMARY KEY ([year], [series]),
+                      CONSTRAINT [UK_icecore_0] UNIQUE ([year], [series])
                     );""")) {
                 ps.execute();
             }
@@ -187,13 +188,15 @@ public class DatabaseService {
     public void refreshDataFromIceCore(List<IceCoreData> data) {
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO icecoredata (year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
+                    "INSERT INTO icecoredata (year, series, data) VALUES (?,?,?) ON CONFLICT (year, series) DO UPDATE SET data=?")) {
                 data.forEach(iceCoreData -> {
                     try {
                         ps.setInt(1, iceCoreData.getYear());
-                        ps.setDouble(2, iceCoreData.getData());
+                        ps.setString(2, iceCoreData.getSeries());
                         ps.setDouble(3, iceCoreData.getData());
+                        ps.setDouble(4, iceCoreData.getData());
                         ps.addBatch();
+
                     } catch (Exception e) {
                         Logger.getGlobal().info(e.getMessage());
                     }
@@ -245,7 +248,8 @@ public class DatabaseService {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     final IceCoreData temp = new IceCoreData(rs.getInt(1));
-                    temp.setData(rs.getDouble(2));
+                    temp.setSeries(rs.getString(2));
+                    temp.setData(rs.getDouble(3));
                     data.add(temp);
                 }
             }

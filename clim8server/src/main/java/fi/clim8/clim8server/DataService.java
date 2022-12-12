@@ -9,6 +9,7 @@ import fi.clim8.clim8server.data.IceCoreData;
 import fi.clim8.clim8server.data.MaunaLoaData;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+
 
 
 public class DataService {
@@ -38,7 +40,7 @@ public class DataService {
             DatabaseService.getInstance().refreshDataFromMoberg2005(fetchMoberg2005(new URL("https://www.ncei.noaa.gov/pub/data/paleo/contributions_by_author/moberg2005/nhtemp-moberg2005.txt")));
             DatabaseService.getInstance().refreshDataFromMaunaLoa(fetchMaunaLoaAnnual(new URL("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_annmean_mlo.txt")));
             DatabaseService.getInstance().refreshDataFromMaunaLoa(fetchMaunaLoaMonthly(new URL("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt")));
-            DatabaseService.getInstance().refreshDataFromIceCore(fetchIceCore(new URL("https://cdiac.ess-dive.lbl.gov/ftp/trends/co2/lawdome.combined.dat")));
+            DatabaseService.getInstance().refreshDataFromIceCore(fetchIceCore());
         }
         Logger.getGlobal().info("Database refreshed, have fun!");
     }
@@ -147,16 +149,17 @@ public class DataService {
         return maunaLoaDataList;
     }
 
-    public List<IceCoreData> fetchIceCore(URL url) {
+    public List<IceCoreData> fetchIceCore() {
         List<IceCoreData> iceCoreDataList = new ArrayList<>();
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+        try(BufferedReader reader = new BufferedReader(new FileReader("clim8server\\src\\main\\java\\fi\\clim8\\clim8server\\data\\IceCoreData.txt"))) {
             //Skip unnecessary lines
-            Stream<String> lines = reader.lines().skip(22);
+            Stream<String> lines = reader.lines().skip(4);
             
             lines.forEach(line -> {
                 String[] data = line.split(" ");
                 List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
                 IceCoreData tempData = new IceCoreData(Integer.parseInt(list.get(5)));
+                tempData.setSeries((list.get(0)));
                 tempData.setData(Double.parseDouble(list.get(6)));
                 iceCoreDataList.add(tempData);
             });
