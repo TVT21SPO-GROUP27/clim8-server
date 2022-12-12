@@ -7,6 +7,7 @@ import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
 import fi.clim8.clim8server.data.IceCoreData;
 import fi.clim8.clim8server.data.MaunaLoaData;
+import fi.clim8.clim8server.data.VostokData;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -41,6 +42,7 @@ public class DataService {
             DatabaseService.getInstance().refreshDataFromMaunaLoa(fetchMaunaLoaAnnual(new URL("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_annmean_mlo.txt")));
             DatabaseService.getInstance().refreshDataFromMaunaLoa(fetchMaunaLoaMonthly(new URL("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt")));
             DatabaseService.getInstance().refreshDataFromIceCore(fetchIceCore());
+            DatabaseService.getInstance().refreshDataFromVostokCore(fetchVostokCore(new URL("https://cdiac.ess-dive.lbl.gov/ftp/trends/co2/vostok.icecore.co2")));
         }
         Logger.getGlobal().info("Database refreshed, have fun!");
     }
@@ -168,4 +170,25 @@ public class DataService {
         }
         return iceCoreDataList;
     }
+
+    public List<VostokData> fetchVostokCore(URL url) {
+        List<VostokData> vostokDataList = new ArrayList<>();
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+            //Skip unnecessary lines
+            Stream<String> lines = reader.lines().skip(21);
+
+            lines.forEach(line -> {
+                String[] data = line.split(" ");
+                List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
+                VostokData vostokdata = new VostokData(Double.parseDouble(list.get(0)));
+                vostokdata.setYear(Integer.parseInt(list.get(3)));
+                vostokdata.setData(Double.parseDouble(list.get(4)));
+                vostokDataList.add(vostokdata);
+            });
+        } catch (IOException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return vostokDataList;
+    }
+
 }

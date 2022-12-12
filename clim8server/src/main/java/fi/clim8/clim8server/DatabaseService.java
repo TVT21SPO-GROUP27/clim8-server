@@ -7,6 +7,7 @@ import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
 import fi.clim8.clim8server.data.IceCoreData;
 import fi.clim8.clim8server.data.MaunaLoaData;
+import fi.clim8.clim8server.data.VostokData;
 import fi.clim8.clim8server.user.User;
 
 import java.sql.Connection;
@@ -94,6 +95,16 @@ public class DatabaseService {
                       [data] DOUBLE NOT NULL,
                       CONSTRAINT [PK_icecore_0] PRIMARY KEY ([year], [series]),
                       CONSTRAINT [UK_icecore_0] UNIQUE ([year], [series])
+                    );""")) {
+                ps.execute();
+            }
+            try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [vostokcoredata] (
+                      [depth] DOUBLE NOT NULL,
+                      [year] INT NOT NULL,
+                      [data] DOUBLE NOT NULL,
+                      CONSTRAINT [PK_vostok_0] PRIMARY KEY ([year]),
+                      CONSTRAINT [UK_vostok_0] UNIQUE ([year])
                     );""")) {
                 ps.execute();
             }
@@ -208,6 +219,28 @@ public class DatabaseService {
         }
     }
 
+    public void refreshDataFromVostokCore(List<VostokData> data) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO vostokcoredata (depth, year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
+                data.forEach(vostokData -> {
+                    try {
+                        ps.setDouble(1, vostokData.getDepth());
+                        ps.setInt(2, vostokData.getYear());
+                        ps.setDouble(3, vostokData.getData());
+                        ps.setDouble(4, vostokData.getData());
+                        ps.addBatch();
+                    } catch (Exception e) {
+                        Logger.getGlobal().info(e.getMessage());
+                    }
+                });
+                ps.executeLargeBatch();
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+    }
+
     public List<AbstractData> fetchMoberg2005Data() {
         List<AbstractData> data = new ArrayList<>();
         try (Connection connection = ds.getConnection()) {
@@ -258,6 +291,25 @@ public class DatabaseService {
         }
         return data;
     }
+
+    public List<VostokData> fetchVostokCoreData() {
+        List<VostokData> data = new ArrayList<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM vostokcoredata")) {
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    final VostokData temp = new VostokData(rs.getDouble(1));
+                    temp.setYear(rs.getInt(2));
+                    temp.setData(rs.getDouble(3));
+                    data.add(temp);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return data;
+    }
+
 
     public List<User> fetchAllUsers() {
         List<User> user = new ArrayList<>();

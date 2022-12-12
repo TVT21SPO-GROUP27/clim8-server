@@ -4,6 +4,7 @@ import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.HadCRUTData;
 import fi.clim8.clim8server.data.IceCoreData;
 import fi.clim8.clim8server.data.MaunaLoaData;
+import fi.clim8.clim8server.data.VostokData;
 import fi.clim8.clim8server.user.User;
 
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,12 @@ public class RestService {
     public ResponseEntity<List<IceCoreData>> getDataFromV4() {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchIceCoreData()));
     }
+
+    @GetMapping("vostokcoredata")
+    public ResponseEntity<List<VostokData>> getDataFromV5() {
+        return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchVostokCoreData()));
+    }
+
 
     @GetMapping("getAllUsers")
     public ResponseEntity<List<User>> getAllUsers() {
