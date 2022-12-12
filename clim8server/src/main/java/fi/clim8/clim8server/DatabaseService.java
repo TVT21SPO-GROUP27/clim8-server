@@ -2,6 +2,8 @@ package fi.clim8.clim8server;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
+import fi.clim8.clim8server.data.ACoreRevised;
 import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
@@ -104,6 +106,15 @@ public class DatabaseService {
                       [data] DOUBLE NOT NULL,
                       CONSTRAINT [PK_vostok_0] PRIMARY KEY ([year]),
                       CONSTRAINT [UK_vostok_0] UNIQUE ([year])
+                    );""")) {
+                ps.execute();
+            }
+            try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [acorereviseddata] (
+                      [year] INT NOT NULL,
+                      [data] DOUBLE NOT NULL,
+                      CONSTRAINT [PK_acorerevised_0] PRIMARY KEY ([year]),
+                      CONSTRAINT [UK_acorerevised_0] UNIQUE ([year])
                     );""")) {
                 ps.execute();
             }
@@ -239,6 +250,27 @@ public class DatabaseService {
         }
     }
 
+    public void refreshDataFromACoreRevised(List<ACoreRevised> data) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO acorereviseddata (year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
+                data.forEach(acoreData -> {
+                    try {
+                        ps.setInt(1, acoreData.getYear());
+                        ps.setDouble(2, acoreData.getData());
+                        ps.setDouble(3, acoreData.getData());
+                        ps.addBatch();
+                    } catch (Exception e) {
+                        Logger.getGlobal().info(e.getMessage());
+                    }
+                });
+                ps.executeLargeBatch();
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+    }
+
     public List<AbstractData> fetchMoberg2005Data() {
         List<AbstractData> data = new ArrayList<>();
         try (Connection connection = ds.getConnection()) {
@@ -297,6 +329,23 @@ public class DatabaseService {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     final VostokData temp = new VostokData(rs.getInt(1));
+                    temp.setData(rs.getDouble(2));
+                    data.add(temp);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return data;
+    }
+
+    public List<ACoreRevised> fetchACoreData() {
+        List<ACoreRevised> data = new ArrayList<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM acorereviseddata")) {
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    final ACoreRevised temp = new ACoreRevised(rs.getInt(1));
                     temp.setData(rs.getDouble(2));
                     data.add(temp);
                 }

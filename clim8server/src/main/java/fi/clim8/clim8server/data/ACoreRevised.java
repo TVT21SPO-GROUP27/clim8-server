@@ -1,10 +1,10 @@
 package fi.clim8.clim8server.data;
 
-public class VostokData {
+public class ACoreRevised {
     int year;
     double data = 0.0;
 
-    public VostokData(int year) {
+    public ACoreRevised(int year) {
         this.year = year;
     }
 

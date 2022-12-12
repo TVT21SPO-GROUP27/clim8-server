@@ -2,6 +2,8 @@ package fi.clim8.clim8server;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
+
+import fi.clim8.clim8server.data.ACoreRevised;
 import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
 import fi.clim8.clim8server.data.HadCRUTData;
@@ -43,6 +45,7 @@ public class DataService {
             DatabaseService.getInstance().refreshDataFromMaunaLoa(fetchMaunaLoaMonthly(new URL("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt")));
             DatabaseService.getInstance().refreshDataFromIceCore(fetchIceCore());
             DatabaseService.getInstance().refreshDataFromVostokCore(fetchVostokCore(new URL("https://cdiac.ess-dive.lbl.gov/ftp/trends/co2/vostok.icecore.co2")));
+            DatabaseService.getInstance().refreshDataFromACoreRevised(fetchACore(new URL("https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/antarctica2015co2composite.txt")));
         }
         Logger.getGlobal().info("Database refreshed, have fun!");
     }
@@ -188,6 +191,25 @@ public class DataService {
             Logger.getGlobal().info(e.getMessage());
         }
         return vostokDataList;
+    }
+
+    public List<ACoreRevised> fetchACore(URL url) {
+        List<ACoreRevised> acoreDataList = new ArrayList<>();
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+            //Skip unnecessary lines
+            Stream<String> lines = reader.lines().skip(138);
+
+            lines.forEach(line -> {
+                String[] data = line.split("\\t");
+                List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
+                ACoreRevised acoredata = new ACoreRevised(Integer.parseInt(list.get(0)));
+                acoredata.setData(Double.parseDouble(list.get(2)));
+                acoreDataList.add(acoredata);
+            });
+        } catch (IOException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return acoreDataList;
     }
 
 }

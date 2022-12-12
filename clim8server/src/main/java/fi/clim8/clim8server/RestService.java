@@ -1,5 +1,6 @@
 package fi.clim8.clim8server;
 
+import fi.clim8.clim8server.data.ACoreRevised;
 import fi.clim8.clim8server.data.AbstractData;
 import fi.clim8.clim8server.data.HadCRUTData;
 import fi.clim8.clim8server.data.IceCoreData;
@@ -38,6 +39,11 @@ public class RestService {
     @GetMapping("vostokcoredata")
     public ResponseEntity<List<VostokData>> getDataFromV5() {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchVostokCoreData()));
+    }
+
+    @GetMapping("acoredata")
+    public ResponseEntity<List<ACoreRevised>> getDataFromV6() {
+        return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchACoreData()));
     }
 
 
