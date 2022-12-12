@@ -178,11 +178,10 @@ public class DataService {
             Stream<String> lines = reader.lines().skip(21);
 
             lines.forEach(line -> {
-                String[] data = line.split(" ");
+                String[] data = line.split("\\t");
                 List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
-                VostokData vostokdata = new VostokData(Double.parseDouble(list.get(0)));
-                vostokdata.setYear(Integer.parseInt(list.get(3)));
-                vostokdata.setData(Double.parseDouble(list.get(4)));
+                VostokData vostokdata = new VostokData(Integer.parseInt(list.get(2)));
+                vostokdata.setData(Double.parseDouble(list.get(3)));
                 vostokDataList.add(vostokdata);
             });
         } catch (IOException e) {

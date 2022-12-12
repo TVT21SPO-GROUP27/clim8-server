@@ -5,16 +5,12 @@ public class VostokData {
     double depth;
     double data = 0.0;
 
-    public VostokData(double depth) {
-        this.depth = depth;
+    public VostokData(int year) {
+        this.year = year;
     }
 
     public int getYear() {
         return year;
-    }
-
-    public double getDepth() {
-        return depth;
     }
 
     public double getData() {

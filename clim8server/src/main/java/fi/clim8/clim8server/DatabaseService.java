@@ -100,7 +100,6 @@ public class DatabaseService {
             }
             try (PreparedStatement ps = connection.prepareStatement("""
                     CREATE TABLE [vostokcoredata] (
-                      [depth] DOUBLE NOT NULL,
                       [year] INT NOT NULL,
                       [data] DOUBLE NOT NULL,
                       CONSTRAINT [PK_vostok_0] PRIMARY KEY ([year]),
@@ -222,13 +221,12 @@ public class DatabaseService {
     public void refreshDataFromVostokCore(List<VostokData> data) {
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO vostokcoredata (depth, year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
+                    "INSERT INTO vostokcoredata (year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
                 data.forEach(vostokData -> {
                     try {
-                        ps.setDouble(1, vostokData.getDepth());
-                        ps.setInt(2, vostokData.getYear());
+                        ps.setInt(1, vostokData.getYear());
+                        ps.setDouble(2, vostokData.getData());
                         ps.setDouble(3, vostokData.getData());
-                        ps.setDouble(4, vostokData.getData());
                         ps.addBatch();
                     } catch (Exception e) {
                         Logger.getGlobal().info(e.getMessage());
@@ -298,9 +296,8 @@ public class DatabaseService {
             try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM vostokcoredata")) {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
-                    final VostokData temp = new VostokData(rs.getDouble(1));
-                    temp.setYear(rs.getInt(2));
-                    temp.setData(rs.getDouble(3));
+                    final VostokData temp = new VostokData(rs.getInt(1));
+                    temp.setData(rs.getDouble(2));
                     data.add(temp);
                 }
             }
