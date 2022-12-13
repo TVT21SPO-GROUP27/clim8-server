@@ -3,8 +3,13 @@ package fi.clim8.clim8server;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import fi.clim8.clim8server.data.*;
-import fi.clim8.clim8server.data.enums.EHadCRUTSummarySeries;
+import fi.clim8.clim8server.data.ACoreRevised;
+import fi.clim8.clim8server.data.AbstractData;
+import fi.clim8.clim8server.data.EHadCRUTSummarySeries;
+import fi.clim8.clim8server.data.HadCRUTData;
+import fi.clim8.clim8server.data.IceCoreData;
+import fi.clim8.clim8server.data.MaunaLoaData;
+import fi.clim8.clim8server.data.VostokData;
 import fi.clim8.clim8server.user.User;
 
 import java.sql.Connection;
@@ -110,18 +115,6 @@ public class DatabaseService {
                       [data] DOUBLE NOT NULL,
                       CONSTRAINT [PK_acorerevised_0] PRIMARY KEY ([year]),
                       CONSTRAINT [UK_acorerevised_0] UNIQUE ([year])
-                    );""")) {
-                ps.execute();
-            }
-
-            // V8
-            try (PreparedStatement ps = connection.prepareStatement("""
-                    CREATE TABLE [nationalcarbonemissionsdata] (
-                      [year] INT NOT NULL,
-                      [data] DOUBLE NOT NULL,
-                      [country] TEXT NOT NULL,
-                      CONSTRAINT [PK_nationalcarbonemissions_0] PRIMARY KEY ([year], [country]),
-                      CONSTRAINT [UK_nationalcarbonemissions_0] UNIQUE ([year], [country])
                     );""")) {
                 ps.execute();
             }
@@ -278,29 +271,6 @@ public class DatabaseService {
         }
     }
 
-    public void refreshDataFromNationalCarbonEmissions(List<NationalCarbonData> data) {
-        try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO nationalcarbonemissionsdata (year, data, country) VALUES (?,?,?) ON CONFLICT (year, country) DO UPDATE SET data=?")) {
-                data.forEach(nationalCarbonData -> {
-                    try {
-                        ps.setInt(1, nationalCarbonData.getYear());
-                        ps.setDouble(2, nationalCarbonData.getData());
-                        ps.setString(3, nationalCarbonData.getCountry());
-                        ps.setDouble(4, nationalCarbonData.getData());
-                        ps.addBatch();
-                        Logger.getGlobal().info("Adding shit!");
-                    } catch (Exception e) {
-                        Logger.getGlobal().info(e.getMessage());
-                    }
-                });
-                ps.executeLargeBatch();
-            }
-        } catch (SQLException e) {
-            Logger.getGlobal().info(e.getMessage());
-        }
-    }
-
     public List<AbstractData> fetchMoberg2005Data() {
         List<AbstractData> data = new ArrayList<>();
         try (Connection connection = ds.getConnection()) {
@@ -376,23 +346,6 @@ public class DatabaseService {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     final ACoreRevised temp = new ACoreRevised(rs.getInt(1));
-                    temp.setData(rs.getDouble(2));
-                    data.add(temp);
-                }
-            }
-        } catch (SQLException e) {
-            Logger.getGlobal().info(e.getMessage());
-        }
-        return data;
-    }
-
-    public List<NationalCarbonData> fetchNationalCarbonData() {
-        List<NationalCarbonData> data = new ArrayList<>();
-        try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM nationalcarbonemissionsdata")) {
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    final NationalCarbonData temp = new NationalCarbonData(rs.getInt(1), rs.getString(3));
                     temp.setData(rs.getDouble(2));
                     data.add(temp);
                 }

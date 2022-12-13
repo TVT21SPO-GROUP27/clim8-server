@@ -1,7 +1,5 @@
 package fi.clim8.clim8server.data;
 
-import fi.clim8.clim8server.data.enums.EHadCRUTSummarySeries;
-
 public class HadCRUTData extends AbstractData {
 
     int month;

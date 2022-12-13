@@ -1,4 +1,4 @@
-package fi.clim8.clim8server.data.enums;
+package fi.clim8.clim8server.data;
 
 public enum EHadCRUTSummarySeries {
     HADCRUT_GLOBAL("global"),
