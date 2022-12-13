@@ -1,11 +1,6 @@
 package fi.clim8.clim8server;
 
-import fi.clim8.clim8server.data.ACoreRevised;
-import fi.clim8.clim8server.data.AbstractData;
-import fi.clim8.clim8server.data.HadCRUTData;
-import fi.clim8.clim8server.data.IceCoreData;
-import fi.clim8.clim8server.data.MaunaLoaData;
-import fi.clim8.clim8server.data.VostokData;
+import fi.clim8.clim8server.data.*;
 import fi.clim8.clim8server.user.User;
 
 import org.springframework.http.ResponseEntity;
@@ -44,6 +39,11 @@ public class RestService {
     @GetMapping("acoredata")
     public ResponseEntity<List<ACoreRevised>> getDataFromV6() {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchACoreData()));
+    }
+
+    @GetMapping("nationalcarbonemissions")
+    public ResponseEntity<List<NationalCarbonData>> getDataFromV8() {
+        return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchNationalCarbonData()));
     }
 
 
