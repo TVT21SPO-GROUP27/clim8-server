@@ -44,6 +44,7 @@ public class DataService {
             DatabaseService.getInstance().refreshDataFromIceCore(fetchIceCore());
             DatabaseService.getInstance().refreshDataFromACoreRevised(fetchACore(new URL("https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/antarctica2015co2composite.txt")));
 
+            Logger.getGlobal().info("Preparing for V8 fetching!");
             // V8
             DatabaseService.getInstance().refreshDataFromNationalCarbonEmissions(fetchNationalCarbonEmissions(Paths.get("../../data/National_Carbon_Emissions_2021v1.0.xlsx")));
         }
@@ -51,6 +52,7 @@ public class DataService {
     }
 
     private List<HadCRUTData> getHadCRUTasBigData() throws MalformedURLException {
+        Logger.getGlobal().info("Running HadCRUT fetch process!");
         List<HadCRUTData> hadCRUTDataList = new ArrayList<>();
         String url = "https://www.metoffice.gov.uk/hadobs/hadcrut5/data/current/analysis/diagnostics/HadCRUT.5.0.1.0.analysis.summary_series.";
 
@@ -98,6 +100,7 @@ public class DataService {
     }
 
     public List<AbstractData> fetchMoberg2005(URL url) {
+        Logger.getGlobal().info("Running Moberg2005 fetch process!");
         List<AbstractData> mobergDataList = new ArrayList<>();
         try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
             //Skip unnecessary lines
@@ -117,6 +120,7 @@ public class DataService {
     }
 
     public List<MaunaLoaData> fetchMaunaLoaAnnual(URL url) {
+        Logger.getGlobal().info("Running ManuaLoaAnnual fetch process!");
         List<MaunaLoaData> maunaLoaDataList = new ArrayList<>();
         try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
             //Skip unnecessary lines
@@ -136,6 +140,7 @@ public class DataService {
     }
 
     public List<MaunaLoaData> fetchMaunaLoaMonthly(URL url) {
+        Logger.getGlobal().info("Running ManuaLoaMonthly fetch process!");
         List<MaunaLoaData> maunaLoaDataList = new ArrayList<>();
         try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
             //Skip unnecessary lines
@@ -155,8 +160,9 @@ public class DataService {
     }
 
     public List<IceCoreData> fetchIceCore() {
+        Logger.getGlobal().info("Running IceCore fetch process!");
         List<IceCoreData> iceCoreDataList = new ArrayList<>();
-        try(BufferedReader reader = new BufferedReader(new FileReader("clim8server\\src\\main\\java\\fi\\clim8\\clim8server\\data\\IceCoreData.txt"))) {
+        try(BufferedReader reader = new BufferedReader(new FileReader("../../data/IceCoreData.txt"))) {
             //Skip unnecessary lines
             Stream<String> lines = reader.lines().skip(4);
             
@@ -175,6 +181,7 @@ public class DataService {
     }
 
     public List<ACoreRevised> fetchACore(URL url) {
+        Logger.getGlobal().info("Running ACore fetch process!");
         List<ACoreRevised> acoreDataList = new ArrayList<>();
         try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
             //Skip unnecessary lines
@@ -183,17 +190,23 @@ public class DataService {
             lines.forEach(line -> {
                 String[] data = line.split("\\t");
                 List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
-                ACoreRevised acoredata = new ACoreRevised(Integer.parseInt(list.get(0)));
-                acoredata.setData(Double.parseDouble(list.get(2)));
-                acoreDataList.add(acoredata);
+                if(!list.isEmpty()) {
+                    // BP to CE
+                    double bp = Double.parseDouble(list.get(0));
+                    int ce = (int) Math.round(-bp + 1950);
+                    final ACoreRevised acoredata = new ACoreRevised(ce);
+                    acoredata.setData(Double.parseDouble(list.get(2)));
+                    acoreDataList.add(acoredata);
+                }
             });
         } catch (IOException e) {
-            Logger.getGlobal().info(e.getMessage());
+            Logger.getGlobal().info("Error: " + e.getMessage());
         }
         return acoreDataList;
     }
 
     public List<NationalCarbonData> fetchNationalCarbonEmissions(Path path) {
+        Logger.getGlobal().info("Running NationalCarbonEmissions fetch process!");
         List<NationalCarbonData> list = new ArrayList<>();
         try(Workbook wb = WorkbookFactory.create(path.toFile())) {
             Sheet sheet = wb.getSheetAt(1);
@@ -210,7 +223,6 @@ public class DataService {
                 }
                 current.getAndIncrement();
             });
-            Logger.getGlobal().info("Yo! List size: " + list.size());
         } catch (Exception ignore) {}
         return list;
     }

@@ -289,7 +289,6 @@ public class DatabaseService {
                         ps.setString(3, nationalCarbonData.getCountry());
                         ps.setDouble(4, nationalCarbonData.getData());
                         ps.addBatch();
-                        Logger.getGlobal().info("Adding shit!");
                     } catch (Exception e) {
                         Logger.getGlobal().info(e.getMessage());
                     }
