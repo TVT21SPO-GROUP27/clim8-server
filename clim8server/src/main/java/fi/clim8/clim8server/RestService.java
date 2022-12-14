@@ -41,6 +41,16 @@ public class RestService {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchACoreData()));
     }
 
+    @GetMapping("snydertemp")
+    public ResponseEntity<List<Snyder>> getDataFromV7temp() {
+        return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchSnyderTemp()));
+    }
+
+    @GetMapping("snyderco2")
+    public ResponseEntity<List<Snyder>> getDataFromV7co2() {
+        return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchSnyderCo2()));
+    }
+
     @GetMapping("nationalcarbonemissions")
     public ResponseEntity<List<NationalCarbonData>> getDataFromV8() {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchNationalCarbonData()));

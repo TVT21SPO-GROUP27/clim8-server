@@ -44,6 +44,8 @@ public class DataService {
             DatabaseService.getInstance().refreshDataFromIceCore(fetchIceCore());
             DatabaseService.getInstance().refreshDataFromVostokCore(fetchVostok(new URL("https://cdiac.ess-dive.lbl.gov/ftp/trends/co2/vostok.icecore.co2")));
             DatabaseService.getInstance().refreshDataFromACoreRevised(fetchACore(new URL("https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/antarctica2015co2composite.txt")));
+            DatabaseService.getInstance().refreshDataFromSnyderTemp(fetchSnyderTemperature());
+            DatabaseService.getInstance().refreshDataFromSnyderCo2(fetchSnyderCo2meas());
 
             Logger.getGlobal().info("Preparing for V8 fetching!");
             // V8
@@ -224,6 +226,56 @@ public class DataService {
             Logger.getGlobal().info("Error: " + e.getMessage());
         }
         return acoreDataList;
+    }
+
+    public List<Snyder> fetchSnyderTemperature() {
+        Logger.getGlobal().info("Running fetchSnyderTemperature fetch process!");
+        List<Snyder> SnyderTempList = new ArrayList<>();
+        try(BufferedReader reader = new BufferedReader(new FileReader("clim8server\\src\\main\\java\\fi\\clim8\\clim8server\\data\\V7_figure1.txt"))) {
+            //Skip unnecessary lines
+            Stream<String> lines = reader.lines().skip(2);
+            
+            lines.forEach(line -> {
+                String[] data = line.split("\\t");
+                List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
+
+                if (!list.isEmpty()) {
+                double bp = Double.parseDouble(list.get(0));
+                int ce = (int) Math.round(-bp + 1950); 
+                Snyder tempData = new Snyder(ce);
+                tempData.setData(Double.parseDouble(list.get(1)));
+                SnyderTempList.add(tempData);
+                }
+         });
+        } catch (IOException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return SnyderTempList;
+    }
+
+    public List<Snyder> fetchSnyderCo2meas() {
+        Logger.getGlobal().info("Running fetchSnyderCo2meas fetch process!");
+        List<Snyder> SnyderTempList = new ArrayList<>();
+        try(BufferedReader reader = new BufferedReader(new FileReader("clim8server\\src\\main\\java\\fi\\clim8\\clim8server\\data\\V7_co2.txt"))) {
+            //Skip unnecessary lines
+            Stream<String> lines = reader.lines().skip(1);
+            
+             lines.forEach(line -> {
+                String[] data = line.split("\\t");
+                List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
+
+                if (!list.isEmpty()) {
+                double bp = Double.parseDouble(list.get(0));
+                int ce = (int) Math.round(-bp + 1950); 
+                Snyder tempData = new Snyder(ce);
+                tempData.setData(Double.parseDouble(list.get(1)));
+                SnyderTempList.add(tempData);
+                }
+         }); 
+         }   catch (IOException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return SnyderTempList;
     }
 
     public List<NationalCarbonData> fetchNationalCarbonEmissions(Path path) {
