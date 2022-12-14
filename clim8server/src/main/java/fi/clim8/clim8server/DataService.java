@@ -218,7 +218,7 @@ public class DataService {
                     double bp = Double.parseDouble(list.get(0));
                     int ce = (int) Math.round(-bp + 1950);
                     final ACoreRevised acoredata = new ACoreRevised(ce);
-                    acoredata.setData(Double.parseDouble(list.get(2)));
+                    acoredata.setData(Double.parseDouble(list.get(1)));
                     acoreDataList.add(acoredata);
                 }
             });
