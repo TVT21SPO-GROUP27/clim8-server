@@ -56,6 +56,10 @@ public class RestService {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchNationalCarbonData()));
     }
 
+    @GetMapping("humanevolution")
+    public ResponseEntity<List<HumanEvolution>> getDataFromV10() {
+        return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchEvolutionData()));
+    }
 
     @GetMapping("getAllUsers")
     public ResponseEntity<List<User>> getAllUsers() {

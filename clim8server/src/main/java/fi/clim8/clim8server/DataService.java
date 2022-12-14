@@ -46,6 +46,7 @@ public class DataService {
             DatabaseService.getInstance().refreshDataFromACoreRevised(fetchACore(new URL("https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/antarctica2015co2composite.txt")));
             DatabaseService.getInstance().refreshDataFromSnyderTemp(fetchSnyderTemperature());
             DatabaseService.getInstance().refreshDataFromSnyderCo2(fetchSnyderCo2meas());
+            DatabaseService.getInstance().refreshDataFromHumanEvolution(fetchEvolutionData());
 
             Logger.getGlobal().info("Preparing for V8 fetching!");
             // V8
@@ -298,5 +299,25 @@ public class DataService {
             });
         } catch (Exception ignore) {}
         return list;
+    }
+
+    public List<HumanEvolution> fetchEvolutionData() {
+        Logger.getGlobal().info("Running fetchEvolutionData process!");
+        List<HumanEvolution> evolutionDataList = new ArrayList<>();
+        try(BufferedReader reader = new BufferedReader(new FileReader("clim8server\\src\\main\\java\\fi\\clim8\\clim8server\\data\\humanEvolution.txt"))) {
+            //Skip unnecessary lines
+            Stream<String> lines = reader.lines().skip(0);
+            
+            lines.forEach(line -> {
+                String[] data = line.split("\\t");
+                List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
+                HumanEvolution tempData = new HumanEvolution(Integer.parseInt(list.get(0)));
+                tempData.setDescription(list.get(1));
+                evolutionDataList.add(tempData);
+            });
+        } catch (IOException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return evolutionDataList;
     }
 }

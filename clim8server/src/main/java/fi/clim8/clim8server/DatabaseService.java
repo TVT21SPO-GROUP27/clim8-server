@@ -118,8 +118,8 @@ public class DatabaseService {
                     CREATE TABLE [snydertemp] (
                       [year] INT NOT NULL,
                       [data] DOUBLE NOT NULL,
-                      CONSTRAINT [PK_acorerevised_0] PRIMARY KEY ([year]),
-                      CONSTRAINT [UK_acorerevised_0] UNIQUE ([year])
+                      CONSTRAINT [PK_snyder_0] PRIMARY KEY ([year]),
+                      CONSTRAINT [UK_snyder_0] UNIQUE ([year])
                     );""")) {
                 ps.execute();
             }
@@ -127,8 +127,8 @@ public class DatabaseService {
                     CREATE TABLE [snyderco2] (
                       [year] INT NOT NULL,
                       [data] DOUBLE NOT NULL,
-                      CONSTRAINT [PK_acorerevised_0] PRIMARY KEY ([year]),
-                      CONSTRAINT [UK_acorerevised_0] UNIQUE ([year])
+                      CONSTRAINT [PK_snyder_0] PRIMARY KEY ([year]),
+                      CONSTRAINT [PK_snyder_0] UNIQUE ([year])
                     );""")) {
                 ps.execute();
             }
@@ -141,6 +141,15 @@ public class DatabaseService {
                       [country] TEXT NOT NULL,
                       CONSTRAINT [PK_nationalcarbonemissions_0] PRIMARY KEY ([year], [country]),
                       CONSTRAINT [UK_nationalcarbonemissions_0] UNIQUE ([year], [country])
+                    );""")) {
+                ps.execute();
+            }
+            try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [humanevolution] (
+                      [year] INT NOT NULL,
+                      [description] TEXT NOT NULL,
+                      CONSTRAINT [PK_humanevolution_0] PRIMARY KEY ([year]),
+                      CONSTRAINT [UK_humanevolution_0] UNIQUE ([year], [description])
                     );""")) {
                 ps.execute();
             }
@@ -338,6 +347,26 @@ public class DatabaseService {
         }
     }
 
+    public void refreshDataFromHumanEvolution(List<HumanEvolution> data) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO humanevolution (year, description) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET description=?")) {
+                data.forEach(HumanEvolution -> {
+                    try {
+                        ps.setInt(1, HumanEvolution.getYear());
+                        ps.setString(2, HumanEvolution.getDescription());
+                        ps.addBatch();
+                    } catch (Exception e) {
+                        Logger.getGlobal().info(e.getMessage());
+                    }
+                });
+                ps.executeLargeBatch();
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+    }
+
     public void refreshDataFromNationalCarbonEmissions(List<NationalCarbonData> data) {
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(
@@ -487,6 +516,23 @@ public class DatabaseService {
                 while (rs.next()) {
                     final NationalCarbonData temp = new NationalCarbonData(rs.getInt(1), rs.getString(3));
                     temp.setData(rs.getDouble(2));
+                    data.add(temp);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return data;
+    }
+
+    public List<HumanEvolution> fetchEvolutionData() {
+        List<HumanEvolution> data = new ArrayList<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM humanevolution")) {
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    final HumanEvolution temp = new HumanEvolution(rs.getInt(1));
+                    temp.setDescription(rs.getString(2));
                     data.add(temp);
                 }
             }
