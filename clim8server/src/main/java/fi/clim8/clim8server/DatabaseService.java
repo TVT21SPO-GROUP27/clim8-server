@@ -144,6 +144,16 @@ public class DatabaseService {
                     );""")) {
                 ps.execute();
             }
+
+            try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [globalghgdata] (
+                      [country] TEXT NOT NULL,
+                      [data] DOUBLE NOT NULL,
+                      CONSTRAINT [PK_globalghg_0] PRIMARY KEY ([country]),
+                      CONSTRAINT [UK_globalghg_0] UNIQUE ([country])
+                    );""")) {
+                ps.execute();
+            }
         } catch (SQLException e) {
             Logger.getGlobal().info(e.getMessage());
         }
@@ -360,6 +370,27 @@ public class DatabaseService {
         }
     }
 
+    public void refreshDataFromGlobalGHG(List<GlobalGHGData> data) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO globalghgdata (country, data) VALUES (?,?) ON CONFLICT (country) DO UPDATE SET data=?")) {
+                data.forEach(globalGHGData -> {
+                    try {
+                        ps.setString(1, globalGHGData.getCountry());
+                        ps.setDouble(2, globalGHGData.getGreenhouseGas());
+                        ps.setDouble(3, globalGHGData.getGreenhouseGas());
+                        ps.addBatch();
+                    } catch (Exception e) {
+                        Logger.getGlobal().info(e.getMessage());
+                    }
+                });
+                ps.executeBatch();
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+    }
+
     public List<AbstractData> fetchMoberg2005Data() {
         List<AbstractData> data = new ArrayList<>();
         try (Connection connection = ds.getConnection()) {
@@ -489,6 +520,19 @@ public class DatabaseService {
                     temp.setData(rs.getDouble(2));
                     data.add(temp);
                 }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return data;
+    }
+
+    public List<GlobalGHGData> fetchGlobalGHGData() {
+        List<GlobalGHGData> data = new ArrayList<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM globalghgdata")) {
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) data.add(new GlobalGHGData(rs.getString(1), rs.getDouble(2)));
             }
         } catch (SQLException e) {
             Logger.getGlobal().info(e.getMessage());

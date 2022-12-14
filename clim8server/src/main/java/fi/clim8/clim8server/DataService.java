@@ -46,10 +46,9 @@ public class DataService {
             DatabaseService.getInstance().refreshDataFromACoreRevised(fetchACore(new URL("https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/antarctica2015co2composite.txt")));
             DatabaseService.getInstance().refreshDataFromSnyderTemp(fetchSnyderTemperature());
             DatabaseService.getInstance().refreshDataFromSnyderCo2(fetchSnyderCo2meas());
-
-            Logger.getGlobal().info("Preparing for V8 fetching!");
             // V8
             DatabaseService.getInstance().refreshDataFromNationalCarbonEmissions(fetchNationalCarbonEmissions(Paths.get("../../data/National_Carbon_Emissions_2021v1.0.xlsx")));
+            DatabaseService.getInstance().refreshDataFromGlobalGHG(fetchGlobalGHGData(new URL("https://ourworldindata.org/uploads/2020/09/Global-GHG-Emissions-by-sector-based-on-WRI-2020.xlsx")));
         }
         Logger.getGlobal().info("Database refreshed, have fun!");
     }
@@ -296,6 +295,21 @@ public class DataService {
                 }
                 current.getAndIncrement();
             });
+        } catch (Exception ignore) {}
+        return list;
+    }
+
+    public List<GlobalGHGData> fetchGlobalGHGData(URL url) {
+        Logger.getGlobal().info("Running Global GHG fetch process!");
+        List<GlobalGHGData> list = new ArrayList<>();
+        try(Workbook wb = WorkbookFactory.create(url.openStream())) {
+            Sheet sheet = wb.getSheetAt(0);
+            for(int i = 1; i < 30; i++) {
+                list.add(new GlobalGHGData(
+                    sheet.getRow(i).getCell(0).getStringCellValue(),
+                    sheet.getRow(i).getCell(1).getNumericCellValue()
+                ));
+            }
         } catch (Exception ignore) {}
         return list;
     }
