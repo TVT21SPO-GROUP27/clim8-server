@@ -87,7 +87,7 @@ public class DatabaseService {
             }
             try (PreparedStatement ps = connection.prepareStatement("""
                     CREATE TABLE [icecoredata] (
-                      [year] INTE NOT NULL,
+                      [year] INT NOT NULL,
                       [series] CHAR(15) NOT NULL,
                       [data] DOUBLE NOT NULL,
                       CONSTRAINT [PK_icecore_0] PRIMARY KEY ([year], [series]),
@@ -106,6 +106,25 @@ public class DatabaseService {
             }
             try (PreparedStatement ps = connection.prepareStatement("""
                     CREATE TABLE [acorereviseddata] (
+                      [year] INT NOT NULL,
+                      [data] DOUBLE NOT NULL,
+                      CONSTRAINT [PK_acorerevised_0] PRIMARY KEY ([year]),
+                      CONSTRAINT [UK_acorerevised_0] UNIQUE ([year])
+                    );""")) {
+                ps.execute();
+            }
+
+           try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [snydertemp] (
+                      [year] INT NOT NULL,
+                      [data] DOUBLE NOT NULL,
+                      CONSTRAINT [PK_acorerevised_0] PRIMARY KEY ([year]),
+                      CONSTRAINT [UK_acorerevised_0] UNIQUE ([year])
+                    );""")) {
+                ps.execute();
+            }
+           try (PreparedStatement ps = connection.prepareStatement("""
+                    CREATE TABLE [snyderco2] (
                       [year] INT NOT NULL,
                       [data] DOUBLE NOT NULL,
                       CONSTRAINT [PK_acorerevised_0] PRIMARY KEY ([year]),
@@ -277,6 +296,47 @@ public class DatabaseService {
             Logger.getGlobal().info(e.getMessage());
         }
     }
+    public void refreshDataFromSnyderTemp(List<Snyder> data) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO snydertemp (year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
+                data.forEach(Snyder -> {
+                    try {
+                        ps.setInt(1, Snyder.getYear());
+                        ps.setDouble(2, Snyder.getData());
+                        ps.setDouble(3, Snyder.getData());
+                        ps.addBatch();
+                    } catch (Exception e) {
+                        Logger.getGlobal().info(e.getMessage());
+                    }
+                });
+                ps.executeLargeBatch();
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+    }
+
+    public void refreshDataFromSnyderCo2(List<Snyder> data) {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO snyderco2 (year, data) VALUES (?,?) ON CONFLICT (year) DO UPDATE SET data=?")) {
+                data.forEach(Snyder -> {
+                    try {
+                        ps.setInt(1, Snyder.getYear());
+                        ps.setDouble(2, Snyder.getData());
+                        ps.setDouble(3, Snyder.getData());
+                        ps.addBatch();
+                    } catch (Exception e) {
+                        Logger.getGlobal().info(e.getMessage());
+                    }
+                });
+                ps.executeLargeBatch();
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+    }
 
     public void refreshDataFromNationalCarbonEmissions(List<NationalCarbonData> data) {
         try (Connection connection = ds.getConnection()) {
@@ -375,6 +435,40 @@ public class DatabaseService {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     final ACoreRevised temp = new ACoreRevised(rs.getInt(1));
+                    temp.setData(rs.getDouble(2));
+                    data.add(temp);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return data;
+    }
+
+    public List<Snyder> fetchSnyderTemp() {
+        List<Snyder> data = new ArrayList<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM snydertemp")) {
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    final Snyder temp = new Snyder(rs.getInt(1));
+                    temp.setData(rs.getDouble(2));
+                    data.add(temp);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return data;
+    }
+
+    public List<Snyder> fetchSnyderCo2() {
+        List<Snyder> data = new ArrayList<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM snyderco2")) {
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    final Snyder temp = new Snyder(rs.getInt(1));
                     temp.setData(rs.getDouble(2));
                     data.add(temp);
                 }
