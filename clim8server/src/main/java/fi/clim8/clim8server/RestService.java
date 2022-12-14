@@ -56,6 +56,11 @@ public class RestService {
         return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchNationalCarbonData()));
     }
 
+    @GetMapping("globalghg")
+    public ResponseEntity<List<GlobalGHGData>> getDataFromV9() {
+        return ResponseEntity.of(Optional.of(DatabaseService.getInstance().fetchGlobalGHGData()));
+    }
+
 
     @GetMapping("getAllUsers")
     public ResponseEntity<List<User>> getAllUsers() {
