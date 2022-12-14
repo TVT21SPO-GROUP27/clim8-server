@@ -42,6 +42,7 @@ public class DataService {
             DatabaseService.getInstance().refreshDataFromMaunaLoa(fetchMaunaLoaAnnual(new URL("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_annmean_mlo.txt")));
             DatabaseService.getInstance().refreshDataFromMaunaLoa(fetchMaunaLoaMonthly(new URL("https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt")));
             DatabaseService.getInstance().refreshDataFromIceCore(fetchIceCore());
+            DatabaseService.getInstance().refreshDataFromVostokCore(fetchVostok(new URL("https://cdiac.ess-dive.lbl.gov/ftp/trends/co2/vostok.icecore.co2")));
             DatabaseService.getInstance().refreshDataFromACoreRevised(fetchACore(new URL("https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/antarctica2015co2composite.txt")));
 
             Logger.getGlobal().info("Preparing for V8 fetching!");
@@ -162,7 +163,7 @@ public class DataService {
     public List<IceCoreData> fetchIceCore() {
         Logger.getGlobal().info("Running IceCore fetch process!");
         List<IceCoreData> iceCoreDataList = new ArrayList<>();
-        try(BufferedReader reader = new BufferedReader(new FileReader("../../data/IceCoreData.txt"))) {
+        try(BufferedReader reader = new BufferedReader(new FileReader("clim8server\\src\\main\\java\\fi\\clim8\\clim8server\\data\\IceCoreData.txt"))) {
             //Skip unnecessary lines
             Stream<String> lines = reader.lines().skip(4);
             
@@ -179,6 +180,26 @@ public class DataService {
         }
         return iceCoreDataList;
     }
+        public List<VostokData> fetchVostok(URL url) {
+        Logger.getGlobal().info("Running Vostok fetch process!");
+        List<VostokData> vostokDataList = new ArrayList<>();
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+            //Skip unnecessary lines
+            Stream<String> lines = reader.lines().skip(21);
+            
+            lines.forEach(line -> {
+                String[] data = line.split("\\t");
+                List<String> list = Arrays.stream(data).filter(string -> !string.isEmpty()).toList();
+                VostokData tempData = new VostokData(Integer.parseInt(list.get(2)));
+                tempData.setData(Double.parseDouble(list.get(3)));
+                vostokDataList.add(tempData);
+            });
+        } catch (IOException e) {
+            Logger.getGlobal().info(e.getMessage());
+        }
+        return vostokDataList;
+    }
+    
 
     public List<ACoreRevised> fetchACore(URL url) {
         Logger.getGlobal().info("Running ACore fetch process!");
