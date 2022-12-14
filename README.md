@@ -31,7 +31,7 @@ Tekijät olivat Niklas Siltala, Timon Poutiainen, Joona Sivonen ja Lassi Riekkol
 </div> 
 <div align='center'>
   <picture>
-    <img src='.https://github.com/TVT21SPO-GROUP27/clim8-client/blob//master/Photos/localdata.png' height='192' alt="Logo">
+    <img src='.https://github.com/TVT21SPO-GROUP27/clim8-client/blob/master/Photos/localdata.png' height='192' alt="Logo">
   </picture>
 </div> 
 
